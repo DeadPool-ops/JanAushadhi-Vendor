@@ -6,7 +6,6 @@ const BottomNavigation = ({ activeTab, onTabChange }) => {
   return (
     <View pointerEvents="box-none" style={styles.wrapper}>
       <View style={styles.pillContainer}>
-
         {/* Dashboard */}
         <TouchableOpacity
           style={[
@@ -61,12 +60,11 @@ const BottomNavigation = ({ activeTab, onTabChange }) => {
           onPress={() => onTabChange('profile')}
         >
           <Feather
-            name="user"
+            name="users"
             size={24}
             color={activeTab === 'profile' ? '#2563EB' : '#E5E7EB'}
           />
         </TouchableOpacity>
-
       </View>
     </View>
   );

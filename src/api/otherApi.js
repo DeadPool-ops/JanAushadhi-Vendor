@@ -30,7 +30,7 @@ export const acceptIncomingOrder = async ( vendorId, orderId, status, selfDelive
   formData.append("F4_BT", status);
   formData.append("F4_STAT", selfDelivery);
 
-  console.log(formData);
+  console.log('Accept Incoming Order :',formData);
   return apiClient.post("/accept_order", formData, {
     headers: { "Content-Type": "multipart/form-data" }
   });

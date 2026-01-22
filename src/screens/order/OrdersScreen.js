@@ -199,7 +199,7 @@ const OrdersScreen = ({ route, navigation: navProp }) => {
     <SafeAreaView
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+      <StatusBar translucent={true} />
 
       {/* HEADER */}
       <View style={styles.header}>
@@ -234,7 +234,11 @@ const OrdersScreen = ({ route, navigation: navProp }) => {
               { backgroundColor: colors.card, borderColor: colors.border },
             ]}
           >
-            <Text style={{ fontSize: 26, color: colors.primary, marginBottom:4 }}>⟳</Text>
+            <Text
+              style={{ fontSize: 26, color: colors.primary, marginBottom: 4 }}
+            >
+              ⟳
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -405,167 +409,158 @@ const OrdersScreen = ({ route, navigation: navProp }) => {
                 Orders will appear here when customers place them
               </Text>
             </View>
-            ) : (
-              activeOrders.map((order, index) => {
-                const badge = getStatusBadge(order);
+          ) : (
+            activeOrders.map((order, index) => {
+              const badge = getStatusBadge(order);
 
-                return (
-                  <TouchableOpacity
-                    key={order.id}
-                    style={[
-                      styles.orderCard,
-                      {
-                        backgroundColor: colors.card,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                    onPress={() => {
-                      if (activeTab === 'completed') {
-                        navigation.navigate('CompletedOrderDetail', { order });
-                      } else if (
-                        activeTab === 'onDelivery' &&
-                        onDeliverySubTab === 'self'
-                      ) {
-                        navigation.navigate('SelfDeliveryOrder', {
-                          order,
-                          activeTab,
-                          onRefresh: fetchAllOrders,
-                        });
-                      } else {
-                        navigation.navigate('OrderDetail', {
-                          order,
-                          activeTab,
-                          onRefresh: fetchAllOrders,
-                        });
-                      }
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.orderHeader}>
-                      <View
-                        style={[
-                          styles.orderBadge,
-                          {
-                            backgroundColor: isDark
-                              ? 'rgba(96, 165, 250, 0.15)'
-                              : '#EFF6FF',
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.orderNumber,
-                            { color: colors.primary },
-                          ]}
-                        >
-                          {order.orderNumber}
-                        </Text>
-                      </View>
-                      {badge && (
-                        <View
-                          style={{
-                            backgroundColor: badge.bg,
-                            paddingHorizontal: 8,
-                            paddingVertical: 4,
-                            borderRadius: 6,
-                            marginTop: 8,
-                            alignSelf: 'flex-start',
-                          }}
-                        >
-                          <Text
-                            style={{
-                              color: badge.color,
-                              fontSize: 11,
-                              fontWeight: '700',
-                            }}
-                          >
-                            {badge.icon} {badge.label}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-
+              return (
+                <TouchableOpacity
+                  key={order.id}
+                  style={[
+                    styles.orderCard,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                  onPress={() => {
+                    if (activeTab === 'completed') {
+                      navigation.navigate('CompletedOrderDetail', { order });
+                    } else if (
+                      activeTab === 'onDelivery' &&
+                      onDeliverySubTab === 'self'
+                    ) {
+                      navigation.navigate('SelfDeliveryOrder', {
+                        order,
+                        activeTab,
+                        onRefresh: fetchAllOrders,
+                      });
+                    } else {
+                      navigation.navigate('OrderDetail', {
+                        order,
+                        activeTab,
+                        onRefresh: fetchAllOrders,
+                      });
+                    }
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.orderHeader}>
                     <View
                       style={[
-                        styles.amountBadge,
+                        styles.orderBadge,
                         {
                           backgroundColor: isDark
-                            ? 'rgba(34, 197, 94, 0.15)'
-                            : '#F0FDF4',
+                            ? 'rgba(96, 165, 250, 0.15)'
+                            : '#EFF6FF',
                         },
                       ]}
                     >
-                      <Text style={[styles.amount, { color: colors.success }]}>
-                        ₹{order.totalAmount.toLocaleString()}
+                      <Text
+                        style={[styles.orderNumber, { color: colors.primary }]}
+                      >
+                        {order.orderNumber}
                       </Text>
                     </View>
-
-                    <Text style={[styles.customerName, { color: colors.text }]}>
-                      {order.customerName}
-                    </Text>
-
-                    {!!order.customerAddress && (
-                      <View style={styles.addressRow}>
+                    {badge && (
+                      <View
+                        style={{
+                          backgroundColor: badge.bg,
+                          paddingHorizontal: 8,
+                          paddingVertical: 4,
+                          borderRadius: 6,
+                          marginTop: 8,
+                          alignSelf: 'flex-start',
+                        }}
+                      >
                         <Text
-                          style={[
-                            styles.addressIcon,
-                            { color: colors.subText },
-                          ]}
+                          style={{
+                            color: badge.color,
+                            fontSize: 11,
+                            fontWeight: '700',
+                          }}
                         >
-                          📍
-                        </Text>
-                        <Text
-                          style={[
-                            styles.addressText,
-                            { color: colors.subText },
-                          ]}
-                          numberOfLines={2}
-                        >
-                          {order.customerAddress}
+                          {badge.icon} {badge.label}
                         </Text>
                       </View>
                     )}
+                  </View>
 
-                    <View style={styles.orderFooter}>
+                  <View
+                    style={[
+                      styles.amountBadge,
+                      {
+                        backgroundColor: isDark
+                          ? 'rgba(34, 197, 94, 0.15)'
+                          : '#F0FDF4',
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.amount, { color: colors.success }]}>
+                      ₹{order.totalAmount.toLocaleString()}
+                    </Text>
+                  </View>
+
+                  <Text style={[styles.customerName, { color: colors.text }]}>
+                    {order.customerName}
+                  </Text>
+
+                  {!!order.customerAddress && (
+                    <View style={styles.addressRow}>
+                      <Text
+                        style={[styles.addressIcon, { color: colors.subText }]}
+                      >
+                        📍
+                      </Text>
+                      <Text
+                        style={[styles.addressText, { color: colors.subText }]}
+                        numberOfLines={2}
+                      >
+                        {order.customerAddress}
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={styles.orderFooter}>
+                    <View style={styles.metaItem}>
+                      <Text
+                        style={[styles.metaIcon, { color: colors.subText }]}
+                      >
+                        🧾
+                      </Text>
+                      <Text
+                        style={[styles.metaText, { color: colors.subText }]}
+                      >
+                        {order.itemCount || 0} items
+                      </Text>
+                    </View>
+
+                    {!!order.time && (
                       <View style={styles.metaItem}>
                         <Text
                           style={[styles.metaIcon, { color: colors.subText }]}
                         >
-                          🧾
+                          ⏰
                         </Text>
                         <Text
                           style={[styles.metaText, { color: colors.subText }]}
                         >
-                          {order.itemCount || 0} items
+                          {order.time}
                         </Text>
                       </View>
+                    )}
+                  </View>
 
-                      {!!order.time && (
-                        <View style={styles.metaItem}>
-                          <Text
-                            style={[styles.metaIcon, { color: colors.subText }]}
-                          >
-                            ⏰
-                          </Text>
-                          <Text
-                            style={[styles.metaText, { color: colors.subText }]}
-                          >
-                            {order.time}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-
-                    <View
-                      style={[
-                        styles.cardShine,
-                        { opacity: isDark ? 0.03 : 0.05 },
-                      ]}
-                    />
-                  </TouchableOpacity>
-                );
+                  <View
+                    style={[
+                      styles.cardShine,
+                      { opacity: isDark ? 0.03 : 0.05 },
+                    ]}
+                  />
+                </TouchableOpacity>
+              );
             })
-            )}
+          )}
           <View style={{ height: 100 }} />
         </ScrollView>
       )}

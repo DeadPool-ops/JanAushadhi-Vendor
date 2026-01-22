@@ -60,7 +60,7 @@ const BottomNavigation = ({ activeTab, onTabChange }) => {
           onPress={() => onTabChange('profile')}
         >
           <Feather
-            name="users"
+            name="user-check"
             size={24}
             color={activeTab === 'profile' ? '#2563EB' : '#E5E7EB'}
           />

@@ -9,7 +9,7 @@ import {
   PanResponder,
   Dimensions,
   StatusBar,
-  Alert,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -20,6 +20,110 @@ import { orderDetailTheme } from '../../theme/orderDetailTheme';
 import { acceptIncomingOrder } from '../../api/otherApi';
 
 const { width } = Dimensions.get('window');
+
+// Custom Alert Component
+const CustomAlert = ({ visible, type, title, message, onClose, onConfirm }) => {
+  const { theme } = useContext(ThemeContext);
+  const colors = orderDetailTheme[theme];
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return '✅';
+      case 'error':
+        return '❌';
+      case 'warning':
+        return '⚠️';
+      default:
+        return 'ℹ️';
+    }
+  };
+
+  const getIconColor = () => {
+    switch (type) {
+      case 'success':
+        return '#10B981';
+      case 'error':
+        return '#EF4444';
+      case 'warning':
+        return '#F59E0B';
+      default:
+        return '#3B82F6';
+    }
+  };
+
+  return (
+    <Modal
+      transparent
+      visible={visible}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={[styles.alertContainer, { backgroundColor: colors.card }]}>
+          <View
+            style={[
+              styles.iconContainer,
+              { backgroundColor: getIconColor() + '20' },
+            ]}
+          >
+            <Text style={styles.alertIcon}>{getIcon()}</Text>
+          </View>
+
+          <Text style={[styles.alertTitle, { color: colors.text }]}>
+            {title}
+          </Text>
+
+          <Text style={[styles.alertMessage, { color: colors.subText }]}>
+            {message}
+          </Text>
+
+          <View style={styles.alertButtons}>
+            {onConfirm ? (
+              <>
+                <TouchableOpacity
+                  style={[
+                    styles.alertButton,
+                    styles.cancelButton,
+                    { borderColor: colors.border },
+                  ]}
+                  onPress={onClose}
+                >
+                  <Text
+                    style={[styles.cancelButtonText, { color: colors.text }]}
+                  >
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.alertButton,
+                    styles.confirmButton,
+                    { backgroundColor: colors.primary },
+                  ]}
+                  onPress={onConfirm}
+                >
+                  <Text style={styles.confirmButtonText}>OK</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity
+                style={[
+                  styles.alertButton,
+                  styles.singleButton,
+                  { backgroundColor: getIconColor() },
+                ]}
+                onPress={onClose}
+              >
+                <Text style={styles.confirmButtonText}>OK</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
 
 const OrderDetailScreen = ({ route, navigation }) => {
   const { order, activeTab } = route.params;
@@ -33,6 +137,15 @@ const OrderDetailScreen = ({ route, navigation }) => {
   const [selfDelivery, setSelfDelivery] = useState(false);
   const [dragIcon, setDragIcon] = useState('👉');
 
+  // Custom Alert State
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    type: 'info',
+    title: '',
+    message: '',
+    onConfirm: null,
+  });
+
   const { user } = useContext(AuthContext) || {};
   const vendorId = user?.M1_CODE ?? route.params?.vendorId ?? null;
   const selfDeliveryRef = useRef(false);
@@ -41,15 +154,32 @@ const OrderDetailScreen = ({ route, navigation }) => {
   const isOnDelivery = activeTab === 'onDelivery';
   const isCompleted = activeTab === 'completed';
 
-  // Check if order status is "Accept" or "Out For Delivery"
-  const isAccepted = order?.status === 'Accept' || order?.status === 'Accepted';
-  const shouldHideSwipe = isAccepted || isOnDelivery || isCompleted;
+  const isAccepted =
+    order?.statusLabel === 'Accept' ||
+    order?.statusLabel === 'Accepted' ||
+    order?.statusLabel === 'Out For Delivery';
+
+  const shouldHideSwipe =
+    order?.deliveryStat === '1' || order?.deliveryStat === '2' || isCompleted;
 
   const rawOrderNumber = order?.orderNumber ?? order?.id ?? '';
-  console.log('Order :', order.items);
   const orderIdentifier = rawOrderNumber.startsWith('#')
     ? rawOrderNumber.substring(1)
     : rawOrderNumber;
+
+  const showAlert = (type, title, message, onConfirm = null) => {
+    setAlertConfig({
+      visible: true,
+      type,
+      title,
+      message,
+      onConfirm,
+    });
+  };
+
+  const hideAlert = () => {
+    setAlertConfig(prev => ({ ...prev, visible: false }));
+  };
 
   /* ---------------- SWIPE HANDLER ---------------- */
   const panResponder = useRef(
@@ -93,9 +223,11 @@ const OrderDetailScreen = ({ route, navigation }) => {
 
   const handlePerformOrderAction = async (status, statValue) => {
     if (!vendorId) {
-      Alert.alert('Error', 'Vendor ID missing');
-      return resetSwipe();
+      showAlert('error', 'Error', 'Vendor ID is missing. Please try again.');
+      resetSwipe();
+      return;
     }
+
     try {
       setLoading(true);
       const res = await acceptIncomingOrder(
@@ -104,25 +236,35 @@ const OrderDetailScreen = ({ route, navigation }) => {
         status,
         String(statValue),
       );
+
       if (res?.data?.response === 'success') {
-        Alert.alert('Success', res.data.message || `${status}ed`, [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.navigate({
-                name: 'Main',
-                params: { refreshOrders: true },
-                merge: true,
-              });
-            },
+        showAlert(
+          'success',
+          'Success',
+          res.data.message || `Order ${status}ed successfully`,
+          () => {
+            hideAlert();
+            navigation.navigate({
+              name: 'Main',
+              params: { refreshOrders: true },
+              merge: true,
+            });
           },
-        ]);
+        );
       } else {
-        Alert.alert('Error', res?.data?.message || 'Action failed');
+        // Handle specific error messages
+        const errorMessage =
+          res?.data?.message || 'Unable to process the order';
+        showAlert('error', 'Action Failed', errorMessage);
         resetSwipe();
       }
-    } catch {
-      Alert.alert('Network error', 'Please try again');
+    } catch (error) {
+      // Network or other errors
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Network error. Please check your connection and try again.';
+      showAlert('error', 'Connection Error', errorMessage);
       resetSwipe();
     } finally {
       setLoading(false);
@@ -147,6 +289,16 @@ const OrderDetailScreen = ({ route, navigation }) => {
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+
+      {/* Custom Alert */}
+      <CustomAlert
+        visible={alertConfig.visible}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        onClose={hideAlert}
+        onConfirm={alertConfig.onConfirm}
+      />
 
       {/* HEADER */}
       <View
@@ -309,7 +461,7 @@ const OrderDetailScreen = ({ route, navigation }) => {
         <View style={{ height: 160 }} />
       </ScrollView>
 
-      {/* SELF DELIVERY - Only show for incoming orders that haven't been accepted */}
+      {/* SELF DELIVERY */}
       {isIncoming && !shouldHideSwipe && (
         <View
           style={[
@@ -338,7 +490,7 @@ const OrderDetailScreen = ({ route, navigation }) => {
         </View>
       )}
 
-      {/* SWIPE - Hide if order is accepted, on delivery, or completed */}
+      {/* SWIPE */}
       {!shouldHideSwipe && isIncoming && (
         <View
           style={[
@@ -483,19 +635,90 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-
   itemName: {
     fontSize: 14,
     fontWeight: '600',
   },
-
   itemQty: {
     fontSize: 12,
     marginTop: 2,
   },
-
   itemPrice: {
     fontSize: 14,
     fontWeight: '700',
+  },
+
+  // Custom Alert Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  alertContainer: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  iconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  alertIcon: {
+    fontSize: 32,
+  },
+  alertTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  alertMessage: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  alertButtons: {
+    flexDirection: 'row',
+    width: '100%',
+    gap: 12,
+  },
+  alertButton: {
+    flex: 1,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelButton: {
+    borderWidth: 1,
+  },
+  confirmButton: {
+    elevation: 2,
+  },
+  singleButton: {
+    elevation: 2,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  confirmButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });

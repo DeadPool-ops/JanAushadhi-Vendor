@@ -1,4 +1,4 @@
-package com.jan_aushadi_vendor
+package com.logixhunt.janaushadhi_vendor
 
 import android.app.Application
 import com.facebook.react.PackageList

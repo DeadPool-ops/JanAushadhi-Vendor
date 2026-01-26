@@ -74,6 +74,7 @@ const StoreScreen = ({ navigation }) => {
       if (showLoading) setLoading(true);
       setError(null);
       const res = await getProductList();
+      console.log(res);
       const list = extractArray(res);
       setProducts(list.map(normalizeProduct));
     } catch {

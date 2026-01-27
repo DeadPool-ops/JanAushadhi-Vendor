@@ -20,6 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeContext } from '../../context/ThemeContext';
 import { storeTheme } from '../../theme/storeTheme';
 import { baseImageUrl, getProductList } from '../../api/otherApi';
+import ProductDetailModal from '../../components/ProductDetailModal';
 
 const windowWidth = Dimensions.get('window').width;
 const PLACEHOLDER = 'https://via.placeholder.com/400x300.png?text=No+Image';
@@ -35,11 +36,19 @@ const StoreScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [viewer, setViewer] = useState({ visible: false, uri: null });
   const [error, setError] = useState(null);
+  
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState(null);
 
   const buildImageUrl = filename => {
     if (!filename) return PLACEHOLDER;
     if (filename.startsWith('http')) return filename;
     return `${baseImageUrl}${filename}`;
+  };
+
+  const handleViewProduct = productId => {
+    setSelectedProductId(productId);
+    setDetailModalVisible(true);
   };
 
   const normalizeProduct = apiItem => {
@@ -140,9 +149,7 @@ const StoreScreen = ({ navigation }) => {
                   borderColor: colors.actionBorder,
                 },
               ]}
-              onPress={() =>
-                navigation.navigate('ProductDetail', { product: item.raw })
-              }
+              onPress={() => handleViewProduct(item.id)}
             >
               <Text style={[styles.actionText, { color: colors.actionText }]}>
                 View
@@ -282,6 +289,14 @@ const StoreScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+      <ProductDetailModal
+        visible={detailModalVisible}
+        onClose={() => {
+          setDetailModalVisible(false);
+          setSelectedProductId(null);
+        }}
+        productId={selectedProductId}
+      />
     </SafeAreaView>
   );
 };

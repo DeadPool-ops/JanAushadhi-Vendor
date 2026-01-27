@@ -7,8 +7,17 @@ export const baseImageUrl = "https://www.onlineaushadhi.in/myadmin/uploads/produ
 //Get the Products for the list
 export const getProductList = async () => {
 
-  return apiClient.post("/product_list", {
-    headers: { "Content-Type": "multipart/form-data" }
+  return apiClient.post('/product_list', {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
+export const getProductById = async product_id => {
+  const formData = new FormData();
+  formData.append('product_id', product_id);
+
+  return apiClient.post('/get_product_by_id', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
 };
 
